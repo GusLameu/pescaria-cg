@@ -1,0 +1,17 @@
+projeto-cg-pesca/
+├── assets/                 # Imagens para texturas e fontes
+│   └── water_texture.png
+├── core/                   # O "Coração" do Motor Gráfico
+│   ├── __init__.py
+│   ├── canvas.py           # Gerenciamento da matriz de pixels e set_pixel
+│   ├── rasterizer.py       # Bresenham, Círculo, Elipse, Flood Fill
+│   ├── scanline.py         # Algoritmo de preenchimento de polígonos e Textura
+│   ├── transforms.py       # Matrizes de Translação, Escala e Rotação
+│   └── clipping.py         # Algoritmo de Cohen-Sutherland e Window-to-Viewport
+├── game/                   # Lógica do Jogo de Pesca
+│   ├── __init__.py
+│   ├── entities.py         # Classes Peixe, Arpão, Barco (Polígonos)
+│   └── simulation.py       # Gerenciamento de estados, colisões e zoom
+├── main.py                 # Ponto de entrada (Loop do PyGame e Menu)
+├── README.md               # Documentação exigida
+└── requirements.txt        # Dependências (PyGame, Numpy)
