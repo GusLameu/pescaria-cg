@@ -7,7 +7,8 @@ projeto-cg-pesca/
 │   ├── rasterizer.py       # Bresenham, Círculo, Elipse, Flood Fill
 │   ├── scanline.py         # Algoritmo de preenchimento de polígonos e Textura
 │   ├── transforms.py       # Matrizes de Translação, Escala e Rotação
-│   └── clipping.py         # Algoritmo de Cohen-Sutherland e Window-to-Viewport
+│   ├── clipping.py         # Algoritmo de Cohen-Sutherland e Window-to-Viewport
+|   └── constants.py        # Modulo com algumas constantes
 ├── game/                   # Lógica do Jogo de Pesca
 │   ├── __init__.py
 │   ├── entities.py         # Classes Peixe, Arpão, Barco (Polígonos)

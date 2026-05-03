@@ -1,9 +1,12 @@
+# main.py
+
 import pygame
 import sys
 import math
 from core.canvas import Canvas
 from core.scanline import Scanline
 from core.transforms import Transforms
+from core.constants import gerar_textura_procedural, PEIXE_MODELO_UV, COR_MAR
 
 WIDTH, HEIGHT = 800, 600
 FPS = 60
@@ -12,16 +15,13 @@ FPS = 60
 def main():
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
+    pygame.display.set_caption("Motor Gráfico 2D - Jogo de Pesca")
     clock = pygame.time.Clock()
+
     canvas = Canvas(WIDTH, HEIGHT)
 
-    # Vértices ORIGINAIS centrados na origem (0,0)
-    peixe_modelo = [
-        ((50, 0),   (255, 215, 0)),  # Nariz
-        ((0, -30),  (255, 69, 0)),   # Topo
-        ((-50, 0),  (218, 165, 32)),  # Centro/Cauda
-        ((0, 30),   (255, 215, 0))   # Baixo
-    ]
+    # 1. Pré-processamento: Gera a matriz de textura uma única vez
+    textura_matriz = gerar_textura_procedural(64)
 
     angle = 0
     pos_x = 400
@@ -32,42 +32,41 @@ def main():
             if event.type == pygame.QUIT:
                 running = False
 
-        canvas.clear((10, 30, 60))
+        # Limpa o fundo do mar importado das constantes
+        canvas.clear(COR_MAR)
 
         # --- Lógica de Animação ---
-        angle = (angle + 2) % 360  # Gira continuamente
-        oscilacao = math.sin(pygame.time.get_ticks() *
-                             0.005) * 50  # Sobe e desce
-
-        # --- Construção da Matriz de Transformação ---
-        # 1. Escala (pulsação leve)
+        angle = (angle + 2) % 360
+        oscilacao = math.sin(pygame.time.get_ticks() * 0.005) * 50
         s = 1 + math.sin(pygame.time.get_ticks() * 0.01) * 0.1
+
+        # --- Matrizes de Transformação ---
         m_escala = Transforms.scale(s, s)
-
-        # 2. Rotação
         m_rotacao = Transforms.rotation(angle)
-
-        # 3. Translação (posição na tela)
         m_translac = Transforms.translation(pos_x, 300 + oscilacao)
 
-        # Combinar: T * R * S (Ordem importa! Escala primeiro, depois gira, depois move)
         m_final = Transforms.multiply(
             m_translac, Transforms.multiply(m_rotacao, m_escala))
 
-        # Aplicar transformação nos vértices
-        peixe_transformado = []
-        for pt, color in peixe_modelo:
+        # --- Pipeline de Vértices ---
+        peixe_transformado_uv = []
+        for pt, uv in PEIXE_MODELO_UV:
+            # Aplica a transformação APENAS nas coordenadas (x, y)
             novo_pt = Transforms.apply(m_final, pt)
-            peixe_transformado.append((novo_pt, color))
+            # Mantém a coordenada (u, v) original atrelada ao novo ponto
+            peixe_transformado_uv.append((novo_pt, uv))
 
-        # Desenhar
-        Scanline.fill_gradient_polygon(canvas, peixe_transformado)
+        # --- Renderização ---
+        # Desenha usando a função procedural que lê a nossa matriz gerada
+        Scanline.fill_textured_polygon_procedural(
+            canvas, peixe_transformado_uv, textura_matriz)
 
         screen.blit(canvas.get_surface(), (0, 0))
         pygame.display.flip()
         clock.tick(FPS)
 
     pygame.quit()
+    sys.exit()
 
 
 if __name__ == "__main__":
