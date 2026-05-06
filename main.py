@@ -7,6 +7,7 @@ from core.canvas import Canvas
 from core.scanline import Scanline
 from core.transforms import Transforms
 from core.constants import gerar_textura_procedural, PEIXE_MODELO_UV, COR_MAR
+from core.menu import main as menu_main
 
 WIDTH, HEIGHT = 800, 600
 FPS = 60
@@ -17,6 +18,31 @@ def main():
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("Motor Gráfico 2D - Jogo de Pesca")
     clock = pygame.time.Clock()
+
+    while True:
+        # Executa o menu inicial
+        choice = menu_main(screen)
+
+        if choice == "iniciar":
+            break  # Sai do loop do menu e inicia o jogo
+        elif choice == "comandos":
+            # Mostra comandos (simples por enquanto)
+            screen.fill((0,0,0))
+            font = pygame.font.SysFont("Arial", 24)
+            text = font.render("Comandos: Use as teclas para jogar. Pressione ESPAÇO para voltar.", True, (255,255,255))#informar as teclas do jogo
+            screen.blit(text, (50, 300))
+            pygame.display.update()
+            waiting = True
+            while waiting:
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        pygame.quit()
+                        sys.exit()
+                    if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                        waiting = False
+        elif choice == "sair":
+            pygame.quit()
+            sys.exit()
 
     canvas = Canvas(WIDTH, HEIGHT)
 
