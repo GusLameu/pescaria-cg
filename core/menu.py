@@ -255,19 +255,19 @@ def draw_menu(screen):
     # Opções do menu
     option_font = pygame.font.SysFont("Arial", 36)
     iniciar_text = option_font.render("Iniciar", True, WHITE)
-    comandos_text = option_font.render("Comandos", True, WHITE)
+    instrucoes_text = option_font.render("Instruções", True, WHITE)
     sair_text = option_font.render("Sair", True, WHITE)
 
     iniciar_rect = iniciar_text.get_rect(center=(WIDTH // 2, 250))
-    comandos_rect = comandos_text.get_rect(center=(WIDTH // 2, 320))
+    instrucoes_rect = instrucoes_text.get_rect(center=(WIDTH // 2, 320))
     sair_rect = sair_text.get_rect(center=(WIDTH // 2, 390))
 
     screen.blit(iniciar_text, iniciar_rect)
-    screen.blit(comandos_text, comandos_rect)
+    screen.blit(instrucoes_text, instrucoes_rect)
     screen.blit(sair_text, sair_rect)
 
     # Retorna os retângulos para detecção de clique
-    return iniciar_rect, comandos_rect, sair_rect
+    return iniciar_rect, instrucoes_rect, sair_rect
 
 # LOOP PRINCIPAL
 
@@ -279,7 +279,7 @@ def main(screen):
     running = True
 
     while running:
-        iniciar_rect, comandos_rect, sair_rect = draw_menu(screen)
+        iniciar_rect, instrucoes_rect, sair_rect = draw_menu(screen)
         pygame.display.update()
 
         for event in pygame.event.get():
@@ -292,8 +292,8 @@ def main(screen):
                     mouse_pos = event.pos
                     if iniciar_rect.collidepoint(mouse_pos):
                         return "iniciar"
-                    elif comandos_rect.collidepoint(mouse_pos):
-                        return "comandos"
+                    elif instrucoes_rect.collidepoint(mouse_pos):
+                        return "instrucoes"
                     elif sair_rect.collidepoint(mouse_pos):
                         return "sair"
 
@@ -301,7 +301,7 @@ def main(screen):
                 if event.key == pygame.K_1:
                     return "iniciar"
                 elif event.key == pygame.K_2:
-                    return "comandos"
+                    return "instrucoes"
                 elif event.key == pygame.K_3:
                     return "sair"
 
