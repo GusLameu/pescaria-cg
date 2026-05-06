@@ -141,6 +141,55 @@ def flood_fill(screen, x, y, target_color, new_color):
 
 
 # ==============================
+# FERRAMENTAS DE PIXEL ART PARA FUNDO
+# ==============================
+def draw_rect_fill(screen, x1, y1, x2, y2, color):
+    for y in range(y1, y2):
+        for x in range(x1, x2):
+            set_pixel(screen, x, y, color)
+
+
+def draw_sky(screen):
+    for y in range(HEIGHT):
+        r = int(255 * (1 - y / HEIGHT))
+        g = int(150 * (1 - y / HEIGHT))
+        b = int(200 * (y / HEIGHT))
+        for x in range(WIDTH):
+            set_pixel(screen, x, y, (r, g, b))
+
+
+def draw_sun(screen, cx, cy, radius, color):
+    for y in range(-radius, radius):
+        for x in range(-radius, radius):
+            if x*x + y*y <= radius*radius:
+                set_pixel(screen, cx + x, cy + y, color)
+
+
+def draw_water(screen):
+    for y in range(HEIGHT // 2, HEIGHT):
+        for x in range(WIDTH):
+            set_pixel(screen, x, y, (20, 50, 120))
+
+
+def draw_boat(screen):
+    for y in range(350, 380):
+        for x in range(300, 500):
+            if (y > 360 and (x < 320 or x > 480)):
+                continue
+            set_pixel(screen, x, y, (80, 40, 0))
+
+
+def draw_fisherman(screen):
+    draw_rect_fill(screen, 380, 300, 400, 350, (0, 0, 0))
+    draw_rect_fill(screen, 380, 280, 400, 300, (255, 220, 180))
+    draw_rect_fill(screen, 370, 270, 410, 280, (50, 30, 0))
+    for i in range(100):
+        set_pixel(screen, 400 + i, 300 - i // 2, (0, 0, 0))
+    for i in range(50):
+        set_pixel(screen, 500, 250 + i, (255, 255, 255))
+
+
+# ==============================
 # CURSOR ANZOL COM SET PIXEL
 # ==============================
 def create_hook_cursor_pixelart():
@@ -192,7 +241,11 @@ def create_hook_cursor_pixelart():
 # DESENHAR MENU
 
 def draw_menu(screen):
-    screen.fill(BLACK)
+    draw_sky(screen)
+    draw_sun(screen, 600, 150, 60, (255, 180, 0))
+    draw_water(screen)
+    draw_boat(screen)
+    draw_fisherman(screen)
 
     # Título do jogo
     title_font = pygame.font.SysFont("Arial", 48, bold=True)
@@ -216,7 +269,7 @@ def draw_menu(screen):
     # Retorna os retângulos para detecção de clique
     return iniciar_rect, comandos_rect, sair_rect
 
-    # LOOP PRINCIPAL
+# LOOP PRINCIPAL
 
 def main(screen):
     # Define o cursor como anzol
