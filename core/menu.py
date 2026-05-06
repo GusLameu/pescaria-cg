@@ -1,0 +1,255 @@
+import pygame
+import sys
+
+WIDTH, HEIGHT = 800, 600
+# screen será passado ou usado globalmente, mas por enquanto assume que está definido
+
+# Cores
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
+BLUE = (0, 100, 255)
+RED = (255, 50, 50)
+GREEN = (50, 255, 100)
+YELLOW = (255, 255, 0)
+
+# ==============================
+# SET PIXEL
+# ==============================
+def set_pixel(screen, x, y, color):
+    if 0 <= x < WIDTH and 0 <= y < HEIGHT:
+        screen.set_at((x, y), color)
+
+# ==============================
+# BRESENHAM (RETA)
+# ==============================
+def draw_line(screen, x1, y1, x2, y2, color):
+    dx = abs(x2 - x1)
+    dy = abs(y2 - y1)
+    sx = 1 if x1 < x2 else -1
+    sy = 1 if y1 < y2 else -1
+    err = dx - dy
+
+    while True:
+        set_pixel(screen, x1, y1, color)
+        if x1 == x2 and y1 == y2:
+            break
+        e2 = 2 * err
+        if e2 > -dy:
+            err -= dy
+            x1 += sx
+        if e2 < dx:
+            err += dx
+            y1 += sy
+
+# ==============================
+# CIRCUNFERÊNCIA (MIDPOINT)
+# ==============================
+def draw_circle(screen, xc, yc, r, color):
+    x = 0
+    y = r
+    p = 1 - r
+
+    def plot_circle_points(xc, yc, x, y):
+        points = [
+            (xc+x, yc+y), (xc-x, yc+y),
+            (xc+x, yc-y), (xc-x, yc-y),
+            (xc+y, yc+x), (xc-y, yc+x),
+            (xc+y, yc-x), (xc-y, yc-x)
+        ]
+        for px, py in points:
+            set_pixel(screen, px, py, color)
+
+    plot_circle_points(xc, yc, x, y)
+
+    while x < y:
+        x += 1
+        if p < 0:
+            p += 2*x + 1
+        else:
+            y -= 1
+            p += 2*(x - y) + 1
+        plot_circle_points(xc, yc, x, y)
+
+# ==============================
+# ELIPSE (MIDPOINT)
+# ==============================
+def draw_ellipse(screen, xc, yc, rx, ry, color):
+    x = 0
+    y = ry
+
+    rx2 = rx * rx
+    ry2 = ry * ry
+
+    p1 = ry2 - rx2 * ry + 0.25 * rx2
+
+    dx = 2 * ry2 * x
+    dy = 2 * rx2 * y
+
+    def plot_ellipse(xc, yc, x, y):
+        set_pixel(screen, xc + x, yc + y, color)
+        set_pixel(screen, xc - x, yc + y, color)
+        set_pixel(screen, xc + x, yc - y, color)
+        set_pixel(screen, xc - x, yc - y, color)
+
+    # Região 1
+    while dx < dy:
+        plot_ellipse(xc, yc, x, y)
+        x += 1
+        dx += 2 * ry2
+        if p1 < 0:
+            p1 += dx + ry2
+        else:
+            y -= 1
+            dy -= 2 * rx2
+            p1 += dx - dy + ry2
+
+    # Região 2
+    p2 = (ry2)*(x+0.5)**2 + (rx2)*(y-1)**2 - rx2*ry2
+
+    while y >= 0:
+        plot_ellipse(xc, yc, x, y)
+        y -= 1
+        dy -= 2 * rx2
+        if p2 > 0:
+            p2 += rx2 - dy
+        else:
+            x += 1
+            dx += 2 * ry2
+            p2 += dx - dy + rx2
+
+# ==============================
+# FLOOD FILL
+# ==============================
+def flood_fill(screen, x, y, target_color, new_color):
+    if target_color == new_color:
+        return
+
+    stack = [(x, y)]
+
+    while stack:
+        px, py = stack.pop()
+
+        if (0 <= px < WIDTH and 0 <= py < HEIGHT and
+            screen.get_at((px, py))[:3] == target_color):
+
+            set_pixel(screen, px, py, new_color)
+
+            stack.append((px+1, py))
+            stack.append((px-1, py))
+            stack.append((px, py+1))
+            stack.append((px, py-1))
+
+
+# ==============================
+# CURSOR ANZOL COM SET PIXEL
+# ==============================
+def create_hook_cursor_pixelart():
+    """Cria um cursor customizado em forma de anzol usando set_pixel"""
+    cursor_size = 32
+    cursor_surface = pygame.Surface((cursor_size, cursor_size))
+    cursor_surface.fill(BLACK)
+    cursor_surface.set_colorkey(BLACK)  # Faz o preto ficar transparente
+    
+    # Função para desenhar pixel no cursor
+    def draw_hook_pixel(x, y, color):
+        if 0 <= x < cursor_size and 0 <= y < cursor_size:
+            cursor_surface.set_at((x, y), color)
+    
+    # Haste vertical do anzol
+    for y in range(3, 18):
+        draw_hook_pixel(15, y, WHITE)
+        draw_hook_pixel(16, y, WHITE)
+    
+    # Curva do anzol (gancho)
+    # Parte superior do gancho
+    for x in range(12, 19):
+        draw_hook_pixel(x, 18, WHITE)
+    
+    # Lado esquerdo da curva
+    draw_hook_pixel(12, 19, WHITE)
+    draw_hook_pixel(12, 20, WHITE)
+    draw_hook_pixel(11, 21, WHITE)
+    
+    # Fundo do gancho
+    draw_hook_pixel(11, 21, WHITE)
+    draw_hook_pixel(11, 22, WHITE)
+    draw_hook_pixel(12, 23, WHITE)
+    
+    # Lado direito da curva
+    draw_hook_pixel(13, 24, WHITE)
+    draw_hook_pixel(14, 24, WHITE)
+    
+    # Ponta do anzol (afiada)
+    draw_hook_pixel(15, 25, WHITE)
+    draw_hook_pixel(14, 26, WHITE)
+    draw_hook_pixel(15, 26, WHITE)
+    draw_hook_pixel(16, 26, WHITE)
+    
+    # Define o cursor
+    pygame.mouse.set_cursor((8, 2), cursor_surface)
+
+
+# DESENHAR MENU
+
+def draw_menu(screen):
+    screen.fill(BLACK)
+
+    # Título do jogo
+    title_font = pygame.font.SysFont("Arial", 48, bold=True)
+    title_text = title_font.render("Pescaria CG", True, WHITE)
+    screen.blit(title_text, (WIDTH // 2 - title_text.get_width() // 2, 100))
+
+    # Opções do menu
+    option_font = pygame.font.SysFont("Arial", 36)
+    iniciar_text = option_font.render("Iniciar", True, WHITE)
+    comandos_text = option_font.render("Comandos", True, WHITE)
+    sair_text = option_font.render("Sair", True, WHITE)
+
+    iniciar_rect = iniciar_text.get_rect(center=(WIDTH // 2, 250))
+    comandos_rect = comandos_text.get_rect(center=(WIDTH // 2, 320))
+    sair_rect = sair_text.get_rect(center=(WIDTH // 2, 390))
+
+    screen.blit(iniciar_text, iniciar_rect)
+    screen.blit(comandos_text, comandos_rect)
+    screen.blit(sair_text, sair_rect)
+
+    # Retorna os retângulos para detecção de clique
+    return iniciar_rect, comandos_rect, sair_rect
+
+    # LOOP PRINCIPAL
+
+def main(screen):
+    # Define o cursor como anzol
+    create_hook_cursor_pixelart()
+    
+    clock = pygame.time.Clock()
+    running = True
+
+    while running:
+        iniciar_rect, comandos_rect, sair_rect = draw_menu(screen)
+        pygame.display.update()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return "sair"
+
+            # Detecção de clique do mouse
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:  # Botão esquerdo do mouse
+                    mouse_pos = event.pos
+                    if iniciar_rect.collidepoint(mouse_pos):
+                        return "iniciar"
+                    elif comandos_rect.collidepoint(mouse_pos):
+                        return "comandos"
+                    elif sair_rect.collidepoint(mouse_pos):
+                        return "sair"
+
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_1:
+                    return "iniciar"
+                elif event.key == pygame.K_2:
+                    return "comandos"
+                elif event.key == pygame.K_3:
+                    return "sair"
+
+        clock.tick(60)
