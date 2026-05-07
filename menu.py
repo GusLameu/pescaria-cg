@@ -2,7 +2,6 @@ import pygame
 import sys
 
 WIDTH, HEIGHT = 800, 600
-# screen será passado ou usado globalmente, mas por enquanto assume que está definido
 
 # Cores
 BLACK = (0, 0, 0)
@@ -120,26 +119,6 @@ def draw_ellipse(screen, xc, yc, rx, ry, color):
 
 # FLOOD FILL
 
-def flood_fill(screen, x, y, target_color, new_color):
-    if target_color == new_color:
-        return
-
-    stack = [(x, y)]
-
-    while stack:
-        px, py = stack.pop()
-
-        if (0 <= px < WIDTH and 0 <= py < HEIGHT and
-            screen.get_at((px, py))[:3] == target_color):
-
-            set_pixel(screen, px, py, new_color)
-
-            stack.append((px+1, py))
-            stack.append((px-1, py))
-            stack.append((px, py+1))
-            stack.append((px, py-1))
-
-
 def flood_fill_iterativo(superficie, x, y, cor_preenchimento, cor_borda):
     largura = superficie.get_width()
     altura = superficie.get_height()
@@ -217,52 +196,37 @@ def draw_fisherman(screen):
         set_pixel(screen, 500, 250 + i, (255, 255, 255))
 
 
-
 # CURSOR ANZOL COM SET PIXEL
 
 def create_hook_cursor_pixelart():
-    """Cria um cursor customizado em forma de anzol usando set_pixel"""
     cursor_size = 32
     cursor_surface = pygame.Surface((cursor_size, cursor_size))
     cursor_surface.fill(BLACK)
-    cursor_surface.set_colorkey(BLACK)  # Faz o preto ficar transparente
-    
-    # Função para desenhar pixel no cursor
+    cursor_surface.set_colorkey(BLACK)
+
     def draw_hook_pixel(x, y, color):
         if 0 <= x < cursor_size and 0 <= y < cursor_size:
             cursor_surface.set_at((x, y), color)
-    
-    # Haste vertical do anzol
+
     for y in range(3, 18):
         draw_hook_pixel(15, y, WHITE)
         draw_hook_pixel(16, y, WHITE)
-    
-    # Curva do anzol (gancho)
-    # Parte superior do gancho
+
     for x in range(12, 19):
         draw_hook_pixel(x, 18, WHITE)
-    
-    # Lado esquerdo da curva
+
     draw_hook_pixel(12, 19, WHITE)
     draw_hook_pixel(12, 20, WHITE)
     draw_hook_pixel(11, 21, WHITE)
-    
-    # Fundo do gancho
-    draw_hook_pixel(11, 21, WHITE)
     draw_hook_pixel(11, 22, WHITE)
     draw_hook_pixel(12, 23, WHITE)
-    
-    # Lado direito da curva
     draw_hook_pixel(13, 24, WHITE)
     draw_hook_pixel(14, 24, WHITE)
-    
-    # Ponta do anzol (afiada)
     draw_hook_pixel(15, 25, WHITE)
     draw_hook_pixel(14, 26, WHITE)
     draw_hook_pixel(15, 26, WHITE)
     draw_hook_pixel(16, 26, WHITE)
-    
-    # Define o cursor
+
     pygame.mouse.set_cursor((8, 2), cursor_surface)
 
 
@@ -275,12 +239,10 @@ def draw_menu(screen):
     draw_boat(screen)
     draw_fisherman(screen)
 
-    # Título do jogo
     title_font = pygame.font.SysFont("Arial", 48, bold=True)
     title_text = title_font.render("Pescaria CG", True, WHITE)
     screen.blit(title_text, (WIDTH // 2 - title_text.get_width() // 2, 100))
 
-    # Opções do menu
     option_font = pygame.font.SysFont("Arial", 36)
     iniciar_text = option_font.render("Iniciar", True, WHITE)
     instrucoes_text = option_font.render("Instruções", True, WHITE)
@@ -294,15 +256,14 @@ def draw_menu(screen):
     screen.blit(instrucoes_text, instrucoes_rect)
     screen.blit(sair_text, sair_rect)
 
-    # Retorna os retângulos para detecção de clique
     return iniciar_rect, instrucoes_rect, sair_rect
+
 
 # LOOP PRINCIPAL
 
 def main(screen):
-    # Define o cursor como anzol
     create_hook_cursor_pixelart()
-    
+
     clock = pygame.time.Clock()
     running = True
 
@@ -314,9 +275,8 @@ def main(screen):
             if event.type == pygame.QUIT:
                 return "sair"
 
-            # Detecção de clique do mouse
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if event.button == 1:  # Botão esquerdo do mouse
+                if event.button == 1:
                     mouse_pos = event.pos
                     if iniciar_rect.collidepoint(mouse_pos):
                         return "iniciar"
