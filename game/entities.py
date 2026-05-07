@@ -14,7 +14,9 @@ class Barco:
         self.y = y
         self.cor_madeira = (80, 40, 0)
         self.orig_w, self.orig_h = 200, 30
-        self.trap_offset = 20
+        self.trap_offset = 20                
+        self.direcao = 1 #1 eixo x positivo, -1 eixo x negativo
+        self.direcao_smooth = 1.0
 
     def render(self, canvas, world_to_screen_func):
         # Mapeia centro e dimensões do mundo para pixels da tela (Zoom)
@@ -50,6 +52,7 @@ class Pescador:
         self.cor_roupa = (0, 0, 0)
         self.cor_chapeu = (50, 30, 0)
 
+
     def render(self, canvas, world_to_screen_func):
         # Ponto de ancoragem (assento do pescador no barco)
         sx, sy = world_to_screen_func(self.barco.x, self.barco.y)
@@ -67,7 +70,7 @@ class Pescador:
 
         # 2. Calcular Posições X (Centralização)
         # O tronco começa em um offset lateral fixo
-        off_x = w_to_s(-10)
+        off_x = w_to_s(10) * self.barco.direcao
         tronco_x = int(sx + off_x)
         cabeca_x = tronco_x + (tw - cw) // 2
         chapeu_x = cabeca_x - (hw - cw) // 2
@@ -100,13 +103,16 @@ class VaraDePesca:
     def render(self, canvas, world_to_screen_func):
         # Pontos transformados para uso com algoritmo de Bresenham
         orig_x, orig_y = world_to_screen_func(
-            self.pescador.barco.x, self.pescador.barco.y - 30)
+            self.pescador.barco.x, self.pescador.barco.y - 30
+            )
         ponta_x, ponta_y = world_to_screen_func(
-            self.pescador.barco.x + 80, self.pescador.barco.y - 70)
+            self.pescador.barco.x + (80 * self.pescador.barco.direcao), self.pescador.barco.y - 70 
+            )
         Rasterizer.draw_line(canvas, int(orig_x), int(
-            orig_y), int(ponta_x), int(ponta_y), self.cor_vara)
+            orig_y), int(ponta_x), int(ponta_y), self.cor_vara
+            )
 
-        anzol_x, anzol_y = world_to_screen_func(self.pescador.barco.x + 80,
+        anzol_x, anzol_y = world_to_screen_func(self.pescador.barco.x + (80 * self.pescador.barco.direcao),
                                                 self.pescador.barco.y - 70 + self.profundidade_linha)
         Rasterizer.draw_line(canvas, int(ponta_x), int(
             ponta_y), int(anzol_x), int(anzol_y), self.cor_linha)

@@ -38,8 +38,10 @@ class Simulation:
         # Navegação do Barco
         if keys[pygame.K_LEFT] and self.barco.x > 100:
             self.barco.x -= 4
+            self.barco.direcao = -1
         if keys[pygame.K_RIGHT] and self.barco.x < self.width - 100:
             self.barco.x += 4
+            self.barco.direcao = 1
 
         # Movimentação do Anzol
         if keys[pygame.K_DOWN] and self.vara.profundidade_linha < 250:
@@ -60,7 +62,7 @@ class Simulation:
 
     def _check_collisions(self):
         """Verifica intersecção entre anzol e peixes via distância euclidiana."""
-        anzol_x = self.barco.x + 80
+        anzol_x = self.barco.x + (80 * self.barco.direcao)
         anzol_y = self.barco.y - 70 + self.vara.profundidade_linha
 
         # Lógica de captura: Distância < Raio de Colisão
@@ -75,7 +77,7 @@ class Simulation:
         for p in self.peixes_normais:
             if math.sqrt((anzol_x - p.x)**2 + (anzol_y - p.y)**2) < 30:
                 self.pontuacao += 10
-                p.x = -150 if p.vel > 0 else 950
+                p.x = -150 if p.velocidade > 0 else 950
                 self.vara.profundidade_linha = 20
 
     def get_world_to_screen(self):
