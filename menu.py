@@ -117,27 +117,34 @@ def draw_ellipse(screen, xc, yc, rx, ry, color):
             dx += 2 * ry2
             p2 += dx - dy + rx2
 
-
 # FLOOD FILL
 
-def flood_fill(screen, x, y, target_color, new_color):
-    if target_color == new_color:
-        return
+def setPixel(superficie, x, y, color):
+    set_pixel(superficie, x, y, color)
+
+def flood_fill_iterativo(superficie, x, y, cor_preenchimento, cor_borda):
+    largura = superficie.get_width()
+    altura = superficie.get_height()
 
     stack = [(x, y)]
 
     while stack:
         px, py = stack.pop()
 
-        if (0 <= px < WIDTH and 0 <= py < HEIGHT and
-            screen.get_at((px, py))[:3] == target_color):
+        if not (0 <= px < largura and 0 <= py < altura):
+            continue
 
-            set_pixel(screen, px, py, new_color)
+        cor_atual = superficie.get_at((px, py))[:3]
 
-            stack.append((px+1, py))
-            stack.append((px-1, py))
-            stack.append((px, py+1))
-            stack.append((px, py-1))
+        if cor_atual == cor_borda or cor_atual == cor_preenchimento:
+            continue
+
+        setPixel(superficie, px, py, cor_preenchimento)
+
+        stack.append((px + 1, py))
+        stack.append((px - 1, py))
+        stack.append((px, py + 1))
+        stack.append((px, py - 1))
 
 
 # FERRAMENTAS DE PIXEL ART PARA FUNDO
@@ -158,10 +165,12 @@ def draw_sky(screen):
 
 
 def draw_sun(screen, cx, cy, radius, color):
-    for y in range(-radius, radius):
-        for x in range(-radius, radius):
-            if x*x + y*y <= radius*radius:
-                set_pixel(screen, cx + x, cy + y, color)
+
+    # Desenha a borda do sol
+    draw_circle(screen, cx, cy, radius, WHITE)
+
+    # Preenche o interior do sol com Flood Fill
+    flood_fill_iterativo(screen, cx, cy, color, WHITE)
 
 
 def draw_water(screen):
@@ -170,12 +179,22 @@ def draw_water(screen):
             set_pixel(screen, x, y, (20, 50, 120))
 
 
+def desenhar_poligono(screen, pontos, cor):
+    qtd = len(pontos)
+    for i in range(qtd):
+        x1, y1 = pontos[i]
+        x2, y2 = pontos[(i + 1) % qtd]
+        draw_line(screen, x1, y1, x2, y2, cor)
+
+
 def draw_boat(screen):
-    for y in range(350, 380):
-        for x in range(300, 500):
-            if (y > 360 and (x < 320 or x > 480)):
-                continue
-            set_pixel(screen, x, y, (80, 40, 0))
+    casco = [(300, 360), (500, 360), (480, 380), (320, 380)]
+
+    # contorno do casco do barco
+    desenhar_poligono(screen, casco, WHITE)
+
+    # preenchimento marrom do barco
+    flood_fill_iterativo(screen, 400, 370, (139, 69, 19), WHITE)
 
 
 def draw_fisherman(screen):
@@ -186,7 +205,6 @@ def draw_fisherman(screen):
         set_pixel(screen, 400 + i, 300 - i // 2, (0, 0, 0))
     for i in range(50):
         set_pixel(screen, 500, 250 + i, (255, 255, 255))
-
 
 
 # CURSOR ANZOL COM SET PIXEL
@@ -241,7 +259,7 @@ def create_hook_cursor_pixelart():
 
 def draw_menu(screen):
     draw_sky(screen)
-    draw_sun(screen, 600, 150, 60, (255, 180, 0))
+    draw_sun(screen, 600, 150, 60, YELLOW)
     draw_water(screen)
     draw_boat(screen)
     draw_fisherman(screen)
