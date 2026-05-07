@@ -2,6 +2,7 @@ import pygame
 import sys
 
 WIDTH, HEIGHT = 800, 600
+# screen será passado ou usado globalmente, mas por enquanto assume que está definido
 
 # Cores
 BLACK = (0, 0, 0)
@@ -116,8 +117,10 @@ def draw_ellipse(screen, xc, yc, rx, ry, color):
             dx += 2 * ry2
             p2 += dx - dy + rx2
 
-
 # FLOOD FILL
+
+def setPixel(superficie, x, y, color):
+    set_pixel(superficie, x, y, color)
 
 def flood_fill_iterativo(superficie, x, y, cor_preenchimento, cor_borda):
     largura = superficie.get_width()
@@ -136,7 +139,7 @@ def flood_fill_iterativo(superficie, x, y, cor_preenchimento, cor_borda):
         if cor_atual == cor_borda or cor_atual == cor_preenchimento:
             continue
 
-        set_pixel(superficie, px, py, cor_preenchimento)
+        setPixel(superficie, px, py, cor_preenchimento)
 
         stack.append((px + 1, py))
         stack.append((px - 1, py))
@@ -161,16 +164,12 @@ def draw_sky(screen):
             set_pixel(screen, x, y, (r, g, b))
 
 
-def desenhar_poligono(screen, pontos, cor):
-    qtd = len(pontos)
-    for i in range(qtd):
-        x1, y1 = pontos[i]
-        x2, y2 = pontos[(i + 1) % qtd]
-        draw_line(screen, x1, y1, x2, y2, cor)
-
-
 def draw_sun(screen, cx, cy, radius, color):
+
+    # Desenha a borda do sol
     draw_circle(screen, cx, cy, radius, WHITE)
+
+    # Preenche o interior do sol com Flood Fill
     flood_fill_iterativo(screen, cx, cy, color, WHITE)
 
 
@@ -180,9 +179,21 @@ def draw_water(screen):
             set_pixel(screen, x, y, (20, 50, 120))
 
 
+def desenhar_poligono(screen, pontos, cor):
+    qtd = len(pontos)
+    for i in range(qtd):
+        x1, y1 = pontos[i]
+        x2, y2 = pontos[(i + 1) % qtd]
+        draw_line(screen, x1, y1, x2, y2, cor)
+
+
 def draw_boat(screen):
     casco = [(300, 360), (500, 360), (480, 380), (320, 380)]
+
+    # contorno do casco do barco
     desenhar_poligono(screen, casco, WHITE)
+
+    # preenchimento marrom do barco
     flood_fill_iterativo(screen, 400, 370, (139, 69, 19), WHITE)
 
 
@@ -194,39 +205,61 @@ def draw_fisherman(screen):
         set_pixel(screen, 400 + i, 300 - i // 2, (0, 0, 0))
     for i in range(50):
         set_pixel(screen, 500, 250 + i, (255, 255, 255))
+    draw_rect_fill(screen, 380, 300, 400, 350, (0, 0, 0))
+    # Pé esquerdo usando Ellipse
+    draw_ellipse(screen, 385, 355, 8, 4, WHITE)
+    flood_fill_iterativo(screen, 385, 355, BLACK, WHITE)
+
+    # Pé direito usando Ellipse
+    draw_ellipse(screen, 395, 355, 8, 4, WHITE)
+    flood_fill_iterativo(screen, 395, 355, BLACK, WHITE)    
 
 
 # CURSOR ANZOL COM SET PIXEL
 
 def create_hook_cursor_pixelart():
+    """Cria um cursor customizado em forma de anzol usando set_pixel"""
     cursor_size = 32
     cursor_surface = pygame.Surface((cursor_size, cursor_size))
     cursor_surface.fill(BLACK)
-    cursor_surface.set_colorkey(BLACK)
-
+    cursor_surface.set_colorkey(BLACK)  # Faz o preto ficar transparente
+    
+    # Função para desenhar pixel no cursor
     def draw_hook_pixel(x, y, color):
         if 0 <= x < cursor_size and 0 <= y < cursor_size:
             cursor_surface.set_at((x, y), color)
-
+    
+    # Haste vertical do anzol
     for y in range(3, 18):
         draw_hook_pixel(15, y, WHITE)
         draw_hook_pixel(16, y, WHITE)
-
+    
+    # Curva do anzol (gancho)
+    # Parte superior do gancho
     for x in range(12, 19):
         draw_hook_pixel(x, 18, WHITE)
-
+    
+    # Lado esquerdo da curva
     draw_hook_pixel(12, 19, WHITE)
     draw_hook_pixel(12, 20, WHITE)
     draw_hook_pixel(11, 21, WHITE)
+    
+    # Fundo do gancho
+    draw_hook_pixel(11, 21, WHITE)
     draw_hook_pixel(11, 22, WHITE)
     draw_hook_pixel(12, 23, WHITE)
+    
+    # Lado direito da curva
     draw_hook_pixel(13, 24, WHITE)
     draw_hook_pixel(14, 24, WHITE)
+    
+    # Ponta do anzol (afiada)
     draw_hook_pixel(15, 25, WHITE)
     draw_hook_pixel(14, 26, WHITE)
     draw_hook_pixel(15, 26, WHITE)
     draw_hook_pixel(16, 26, WHITE)
-
+    
+    # Define o cursor
     pygame.mouse.set_cursor((8, 2), cursor_surface)
 
 
@@ -239,10 +272,12 @@ def draw_menu(screen):
     draw_boat(screen)
     draw_fisherman(screen)
 
+    # Título do jogo
     title_font = pygame.font.SysFont("Arial", 48, bold=True)
     title_text = title_font.render("Pescaria CG", True, WHITE)
     screen.blit(title_text, (WIDTH // 2 - title_text.get_width() // 2, 100))
 
+    # Opções do menu
     option_font = pygame.font.SysFont("Arial", 36)
     iniciar_text = option_font.render("Iniciar", True, WHITE)
     instrucoes_text = option_font.render("Instruções", True, WHITE)
@@ -256,14 +291,15 @@ def draw_menu(screen):
     screen.blit(instrucoes_text, instrucoes_rect)
     screen.blit(sair_text, sair_rect)
 
+    # Retorna os retângulos para detecção de clique
     return iniciar_rect, instrucoes_rect, sair_rect
-
 
 # LOOP PRINCIPAL
 
 def main(screen):
+    # Define o cursor como anzol
     create_hook_cursor_pixelart()
-
+    
     clock = pygame.time.Clock()
     running = True
 
@@ -275,8 +311,9 @@ def main(screen):
             if event.type == pygame.QUIT:
                 return "sair"
 
+            # Detecção de clique do mouse
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if event.button == 1:
+                if event.button == 1:  # Botão esquerdo do mouse
                     mouse_pos = event.pos
                     if iniciar_rect.collidepoint(mouse_pos):
                         return "iniciar"
