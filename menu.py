@@ -12,16 +12,16 @@ RED = (255, 50, 50)
 GREEN = (50, 255, 100)
 YELLOW = (255, 255, 0)
 
-# ==============================
+
 # SET PIXEL
-# ==============================
+
 def set_pixel(screen, x, y, color):
     if 0 <= x < WIDTH and 0 <= y < HEIGHT:
         screen.set_at((x, y), color)
 
-# ==============================
+
 # BRESENHAM (RETA)
-# ==============================
+
 def draw_line(screen, x1, y1, x2, y2, color):
     dx = abs(x2 - x1)
     dy = abs(y2 - y1)
@@ -41,9 +41,9 @@ def draw_line(screen, x1, y1, x2, y2, color):
             err += dx
             y1 += sy
 
-# ==============================
+
 # CIRCUNFERÊNCIA (MIDPOINT)
-# ==============================
+
 def draw_circle(screen, xc, yc, r, color):
     x = 0
     y = r
@@ -70,9 +70,9 @@ def draw_circle(screen, xc, yc, r, color):
             p += 2*(x - y) + 1
         plot_circle_points(xc, yc, x, y)
 
-# ==============================
+
 # ELIPSE (MIDPOINT)
-# ==============================
+
 def draw_ellipse(screen, xc, yc, rx, ry, color):
     x = 0
     y = ry
@@ -117,9 +117,9 @@ def draw_ellipse(screen, xc, yc, rx, ry, color):
             dx += 2 * ry2
             p2 += dx - dy + rx2
 
-# ==============================
+
 # FLOOD FILL
-# ==============================
+
 def flood_fill(screen, x, y, target_color, new_color):
     if target_color == new_color:
         return
@@ -140,9 +140,8 @@ def flood_fill(screen, x, y, target_color, new_color):
             stack.append((px, py-1))
 
 
-# ==============================
 # FERRAMENTAS DE PIXEL ART PARA FUNDO
-# ==============================
+
 def draw_rect_fill(screen, x1, y1, x2, y2, color):
     for y in range(y1, y2):
         for x in range(x1, x2):
@@ -189,9 +188,9 @@ def draw_fisherman(screen):
         set_pixel(screen, 500, 250 + i, (255, 255, 255))
 
 
-# ==============================
+
 # CURSOR ANZOL COM SET PIXEL
-# ==============================
+
 def create_hook_cursor_pixelart():
     """Cria um cursor customizado em forma de anzol usando set_pixel"""
     cursor_size = 32
