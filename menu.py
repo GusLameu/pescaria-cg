@@ -1,309 +1,217 @@
 import pygame
 import sys
+from core.rasterizer import Rasterizer
+
+# ---------------------------------------------------------------------------
+# menu.py — tela de menu principal com pixel art desenhado manualmente
+#
+# Este arquivo usa as implementações de core/rasterizer.py (Bresenham, Ponto
+# Médio, Flood Fill) em vez de reimplementá-las localmente.
+#
+# Adaptador _SurfaceCanvas:
+#   O Rasterizer espera um objeto com .set_pixel() e .get_pixel(), mas o
+#   menu opera diretamente sobre pygame.Surface. O adaptador faz a ponte
+#   entre as duas interfaces sem copiar dados.
+# ---------------------------------------------------------------------------
 
 WIDTH, HEIGHT = 800, 600
-# screen será passado ou usado globalmente, mas por enquanto assume que está definido
 
-# Cores
-BLACK = (0, 0, 0)
-WHITE = (255, 255, 255)
-BLUE = (0, 100, 255)
-RED = (255, 50, 50)
-GREEN = (50, 255, 100)
+BLACK  = (0, 0, 0)
+WHITE  = (255, 255, 255)
+BLUE   = (0, 100, 255)
+RED    = (255, 50, 50)
+GREEN  = (50, 255, 100)
 YELLOW = (255, 255, 0)
 
 
-# SET PIXEL
+class _SurfaceCanvas:
+    # Adaptador leve: envolve um pygame.Surface na interface esperada pelo Rasterizer.
+    # Criado temporariamente dentro de cada função de desenho.
+    def __init__(self, surface):
+        self.surface = surface
+        self.width  = surface.get_width()
+        self.height = surface.get_height()
 
-def set_pixel(screen, x, y, color):
-    if 0 <= x < WIDTH and 0 <= y < HEIGHT:
-        screen.set_at((x, y), color)
+    def set_pixel(self, x, y, color):
+        x, y = int(x), int(y)
+        if 0 <= x < self.width and 0 <= y < self.height:
+            self.surface.set_at((x, y), color)
 
-
-# BRESENHAM (RETA)
-
-def draw_line(screen, x1, y1, x2, y2, color):
-    dx = abs(x2 - x1)
-    dy = abs(y2 - y1)
-    sx = 1 if x1 < x2 else -1
-    sy = 1 if y1 < y2 else -1
-    err = dx - dy
-
-    while True:
-        set_pixel(screen, x1, y1, color)
-        if x1 == x2 and y1 == y2:
-            break
-        e2 = 2 * err
-        if e2 > -dy:
-            err -= dy
-            x1 += sx
-        if e2 < dx:
-            err += dx
-            y1 += sy
+    def get_pixel(self, x, y):
+        x, y = int(x), int(y)
+        if 0 <= x < self.width and 0 <= y < self.height:
+            c = self.surface.get_at((x, y))
+            return (c.r, c.g, c.b)
+        return None
 
 
-# CIRCUNFERÊNCIA (MIDPOINT)
-
-def draw_circle(screen, xc, yc, r, color):
-    x = 0
-    y = r
-    p = 1 - r
-
-    def plot_circle_points(xc, yc, x, y):
-        points = [
-            (xc+x, yc+y), (xc-x, yc+y),
-            (xc+x, yc-y), (xc-x, yc-y),
-            (xc+y, yc+x), (xc-y, yc+x),
-            (xc+y, yc-x), (xc-y, yc-x)
-        ]
-        for px, py in points:
-            set_pixel(screen, px, py, color)
-
-    plot_circle_points(xc, yc, x, y)
-
-    while x < y:
-        x += 1
-        if p < 0:
-            p += 2*x + 1
-        else:
-            y -= 1
-            p += 2*(x - y) + 1
-        plot_circle_points(xc, yc, x, y)
-
-
-# ELIPSE (MIDPOINT)
-
-def draw_ellipse(screen, xc, yc, rx, ry, color):
-    x = 0
-    y = ry
-
-    rx2 = rx * rx
-    ry2 = ry * ry
-
-    p1 = ry2 - rx2 * ry + 0.25 * rx2
-
-    dx = 2 * ry2 * x
-    dy = 2 * rx2 * y
-
-    def plot_ellipse(xc, yc, x, y):
-        set_pixel(screen, xc + x, yc + y, color)
-        set_pixel(screen, xc - x, yc + y, color)
-        set_pixel(screen, xc + x, yc - y, color)
-        set_pixel(screen, xc - x, yc - y, color)
-
-    # Região 1
-    while dx < dy:
-        plot_ellipse(xc, yc, x, y)
-        x += 1
-        dx += 2 * ry2
-        if p1 < 0:
-            p1 += dx + ry2
-        else:
-            y -= 1
-            dy -= 2 * rx2
-            p1 += dx - dy + ry2
-
-    # Região 2
-    p2 = (ry2)*(x+0.5)**2 + (rx2)*(y-1)**2 - rx2*ry2
-
-    while y >= 0:
-        plot_ellipse(xc, yc, x, y)
-        y -= 1
-        dy -= 2 * rx2
-        if p2 > 0:
-            p2 += rx2 - dy
-        else:
-            x += 1
-            dx += 2 * ry2
-            p2 += dx - dy + rx2
-
-# FLOOD FILL
-
-def setPixel(superficie, x, y, color):
-    set_pixel(superficie, x, y, color)
-
-def flood_fill_iterativo(superficie, x, y, cor_preenchimento, cor_borda):
-    largura = superficie.get_width()
-    altura = superficie.get_height()
-
-    stack = [(x, y)]
-
-    while stack:
-        px, py = stack.pop()
-
-        if not (0 <= px < largura and 0 <= py < altura):
-            continue
-
-        cor_atual = superficie.get_at((px, py))[:3]
-
-        if cor_atual == cor_borda or cor_atual == cor_preenchimento:
-            continue
-
-        setPixel(superficie, px, py, cor_preenchimento)
-
-        stack.append((px + 1, py))
-        stack.append((px - 1, py))
-        stack.append((px, py + 1))
-        stack.append((px, py - 1))
-
-
-# FERRAMENTAS DE PIXEL ART PARA FUNDO
+# ---------------------------------------------------------------------------
+# FUNÇÕES DE DESENHO DO FUNDO DO MENU
+# ---------------------------------------------------------------------------
 
 def draw_rect_fill(screen, x1, y1, x2, y2, color):
+    # Retângulo preenchido pixel a pixel — sem equivalente direto no core.
+    # Usado para corpo, cabeça e chapéu do pescador.
+    c = _SurfaceCanvas(screen)
     for y in range(y1, y2):
         for x in range(x1, x2):
-            set_pixel(screen, x, y, color)
+            c.set_pixel(x, y, color)
 
 
 def draw_sky(screen):
+    # Gradiente de céu calculado por fórmula linha a linha.
+    # r e g decrescem de cima para baixo; b cresce → topo claro, base azul escuro.
+    c = _SurfaceCanvas(screen)
     for y in range(HEIGHT):
         r = int(255 * (1 - y / HEIGHT))
         g = int(150 * (1 - y / HEIGHT))
         b = int(200 * (y / HEIGHT))
         for x in range(WIDTH):
-            set_pixel(screen, x, y, (r, g, b))
+            c.set_pixel(x, y, (r, g, b))
 
 
 def draw_sun(screen, cx, cy, radius, color):
-
-    # Desenha a borda do sol
-    draw_circle(screen, cx, cy, radius, WHITE)
-
-    # Preenche o interior do sol com Flood Fill
-    flood_fill_iterativo(screen, cx, cy, color, WHITE)
+    # Contorno branco via Rasterizer (Ponto Médio) + preenchimento via Flood Fill.
+    c = _SurfaceCanvas(screen)
+    Rasterizer.draw_circle(c, cx, cy, radius, WHITE)
+    Rasterizer.flood_fill(c, cx, cy, color)
 
 
 def draw_water(screen):
+    # Metade inferior preenchida com azul escuro simulando o mar.
+    c = _SurfaceCanvas(screen)
     for y in range(HEIGHT // 2, HEIGHT):
         for x in range(WIDTH):
-            set_pixel(screen, x, y, (20, 50, 120))
+            c.set_pixel(x, y, (20, 50, 120))
 
 
 def desenhar_poligono(screen, pontos, cor):
+    # Contorno de polígono: Bresenham entre vértices consecutivos (fechado).
+    c = _SurfaceCanvas(screen)
     qtd = len(pontos)
     for i in range(qtd):
         x1, y1 = pontos[i]
         x2, y2 = pontos[(i + 1) % qtd]
-        draw_line(screen, x1, y1, x2, y2, cor)
+        Rasterizer.draw_line(c, x1, y1, x2, y2, cor)
 
 
 def draw_boat(screen):
+    # Casco trapezoidal: contorno branco (Bresenham) + flood fill marrom.
     casco = [(300, 360), (500, 360), (480, 380), (320, 380)]
-
-    # contorno do casco do barco
+    c = _SurfaceCanvas(screen)
     desenhar_poligono(screen, casco, WHITE)
-
-    # preenchimento marrom do barco
-    flood_fill_iterativo(screen, 400, 370, (139, 69, 19), WHITE)
+    Rasterizer.flood_fill(c, 400, 370, (139, 69, 19))
 
 
 def draw_fisherman(screen):
-    draw_rect_fill(screen, 380, 300, 400, 350, (0, 0, 0))
-    draw_rect_fill(screen, 380, 280, 400, 300, (255, 220, 180))
-    draw_rect_fill(screen, 370, 270, 410, 280, (50, 30, 0))
+    # Pescador: retângulos (tronco/cabeça/chapéu), pixels manuais (vara/linha)
+    # e elipses + flood fill (pés).
+    c = _SurfaceCanvas(screen)
+    draw_rect_fill(screen, 380, 300, 400, 350, (0, 0, 0))        # tronco
+    draw_rect_fill(screen, 380, 280, 400, 300, (255, 220, 180))   # cabeça
+    draw_rect_fill(screen, 370, 270, 410, 280, (50, 30, 0))       # chapéu
+
+    # Vara de pesca: pixels diagonais manuais
     for i in range(100):
-        set_pixel(screen, 400 + i, 300 - i // 2, (0, 0, 0))
+        c.set_pixel(400 + i, 300 - i // 2, (0, 0, 0))
+
+    # Linha de pesca: coluna vertical branca
     for i in range(50):
-        set_pixel(screen, 500, 250 + i, (255, 255, 255))
-    draw_rect_fill(screen, 380, 300, 400, 350, (0, 0, 0))
-    # Pé esquerdo usando Ellipse
-    draw_ellipse(screen, 385, 355, 8, 4, WHITE)
-    flood_fill_iterativo(screen, 385, 355, BLACK, WHITE)
+        c.set_pixel(500, 250 + i, (255, 255, 255))
 
-    # Pé direito usando Ellipse
-    draw_ellipse(screen, 395, 355, 8, 4, WHITE)
-    flood_fill_iterativo(screen, 395, 355, BLACK, WHITE)    
+    draw_rect_fill(screen, 380, 300, 400, 350, (0, 0, 0))   # redesenha tronco sobre a linha
+
+    # Pé esquerdo: elipse (Ponto Médio) + flood fill
+    Rasterizer.draw_ellipse(c, 385, 355, 8, 4, WHITE)
+    Rasterizer.flood_fill(c, 385, 355, BLACK)
+
+    # Pé direito: elipse (Ponto Médio) + flood fill
+    Rasterizer.draw_ellipse(c, 395, 355, 8, 4, WHITE)
+    Rasterizer.flood_fill(c, 395, 355, BLACK)
 
 
-# CURSOR ANZOL COM SET PIXEL
+# ---------------------------------------------------------------------------
+# CURSOR PERSONALIZADO EM FORMA DE ANZOL
+# ---------------------------------------------------------------------------
 
 def create_hook_cursor_pixelart():
-    """Cria um cursor customizado em forma de anzol usando set_pixel"""
-    cursor_size = 32
+    # Cursor 32×32 desenhado pixel a pixel em forma de anzol.
+    # set_colorkey(BLACK) torna o preto transparente.
+    cursor_size    = 32
     cursor_surface = pygame.Surface((cursor_size, cursor_size))
     cursor_surface.fill(BLACK)
-    cursor_surface.set_colorkey(BLACK)  # Faz o preto ficar transparente
-    
-    # Função para desenhar pixel no cursor
+    cursor_surface.set_colorkey(BLACK)
+
     def draw_hook_pixel(x, y, color):
         if 0 <= x < cursor_size and 0 <= y < cursor_size:
             cursor_surface.set_at((x, y), color)
-    
-    # Haste vertical do anzol
-    for y in range(3, 18):
+
+    for y in range(3, 18):          # haste vertical
         draw_hook_pixel(15, y, WHITE)
         draw_hook_pixel(16, y, WHITE)
-    
-    # Curva do anzol (gancho)
-    # Parte superior do gancho
-    for x in range(12, 19):
+
+    for x in range(12, 19):         # topo horizontal do gancho
         draw_hook_pixel(x, 18, WHITE)
-    
-    # Lado esquerdo da curva
+
     draw_hook_pixel(12, 19, WHITE)
     draw_hook_pixel(12, 20, WHITE)
     draw_hook_pixel(11, 21, WHITE)
-    
-    # Fundo do gancho
-    draw_hook_pixel(11, 21, WHITE)
     draw_hook_pixel(11, 22, WHITE)
     draw_hook_pixel(12, 23, WHITE)
-    
-    # Lado direito da curva
     draw_hook_pixel(13, 24, WHITE)
     draw_hook_pixel(14, 24, WHITE)
-    
-    # Ponta do anzol (afiada)
-    draw_hook_pixel(15, 25, WHITE)
+    draw_hook_pixel(15, 25, WHITE)  # ponta afiada
     draw_hook_pixel(14, 26, WHITE)
     draw_hook_pixel(15, 26, WHITE)
     draw_hook_pixel(16, 26, WHITE)
-    
-    # Define o cursor
+
     pygame.mouse.set_cursor((8, 2), cursor_surface)
 
 
-# DESENHAR MENU
+# ---------------------------------------------------------------------------
+# RENDERIZAÇÃO DO MENU
+# ---------------------------------------------------------------------------
 
 def draw_menu(screen):
+    # Renderiza o fundo completo e os botões.
+    # Retorna os Rects dos 3 botões para detecção de clique.
     draw_sky(screen)
     draw_sun(screen, 600, 150, 60, YELLOW)
     draw_water(screen)
     draw_boat(screen)
     draw_fisherman(screen)
 
-    # Título do jogo
-    title_font = pygame.font.SysFont("Arial", 48, bold=True)
-    title_text = title_font.render("Pescaria CG", True, WHITE)
+    title_font  = pygame.font.SysFont("Arial", 48, bold=True)
+    title_text  = title_font.render("Pescaria CG", True, WHITE)
     screen.blit(title_text, (WIDTH // 2 - title_text.get_width() // 2, 100))
 
-    # Opções do menu
-    option_font = pygame.font.SysFont("Arial", 36)
-    iniciar_text = option_font.render("Iniciar", True, WHITE)
+    option_font     = pygame.font.SysFont("Arial", 36)
+    iniciar_text    = option_font.render("Iniciar",    True, WHITE)
     instrucoes_text = option_font.render("Instruções", True, WHITE)
-    sair_text = option_font.render("Sair", True, WHITE)
+    sair_text       = option_font.render("Sair",       True, WHITE)
 
-    iniciar_rect = iniciar_text.get_rect(center=(WIDTH // 2, 250))
+    iniciar_rect    = iniciar_text.get_rect(center=(WIDTH // 2, 250))
     instrucoes_rect = instrucoes_text.get_rect(center=(WIDTH // 2, 320))
-    sair_rect = sair_text.get_rect(center=(WIDTH // 2, 390))
+    sair_rect       = sair_text.get_rect(center=(WIDTH // 2, 390))
 
-    screen.blit(iniciar_text, iniciar_rect)
+    screen.blit(iniciar_text,    iniciar_rect)
     screen.blit(instrucoes_text, instrucoes_rect)
-    screen.blit(sair_text, sair_rect)
+    screen.blit(sair_text,       sair_rect)
 
-    # Retorna os retângulos para detecção de clique
     return iniciar_rect, instrucoes_rect, sair_rect
 
-# LOOP PRINCIPAL
+
+# ---------------------------------------------------------------------------
+# LOOP DO MENU
+# ---------------------------------------------------------------------------
 
 def main(screen):
-    # Define o cursor como anzol
+    # Executa um loop próprio até o jogador escolher uma opção,
+    # retornando "iniciar", "instrucoes" ou "sair".
     create_hook_cursor_pixelart()
-    
     clock = pygame.time.Clock()
-    running = True
 
-    while running:
+    while True:
         iniciar_rect, instrucoes_rect, sair_rect = draw_menu(screen)
         pygame.display.update()
 
@@ -311,9 +219,8 @@ def main(screen):
             if event.type == pygame.QUIT:
                 return "sair"
 
-            # Detecção de clique do mouse
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if event.button == 1:  # Botão esquerdo do mouse
+                if event.button == 1:
                     mouse_pos = event.pos
                     if iniciar_rect.collidepoint(mouse_pos):
                         return "iniciar"
