@@ -4,7 +4,54 @@
 ## Descrição do Projeto
 
 Este projeto busca proporcionar uma experiência visual inspirada em uma pescaria em ambiente 2D, simulando o movimento de um peixe em um cenário aquático através de técnicas clássicas de Computação Gráfica. A aplicação combina animação, interação e renderização manual para representar de forma dinâmica elementos presentes em uma cena de pesca.
+---
+## Como Executar o Projeto
 
+### Pré-requisitos
+- Python 3.x
+- Biblioteca PyGame instalada
+
+### Instalação do PyGame
+```bash
+pip install pygame
+```
+## Caso o repositório já esteja clonado e você queira apenas atualizar:
+```bash
+git pull
+```
+
+## Em seguida, acesse a pasta do projeto:
+```bash
+cd pescaria-cg
+```
+---
+
+## Instalação das Dependências
+
+O projeto utiliza a biblioteca PyGame.
+
+Instale com:
+```bash
+pip install pygame
+```
+Caso esteja utilizando Linux ou MacOS:
+```bash
+pip3 install pygame
+```
+---
+
+## 4. Execução do Jogo
+
+Após a instalação das dependências, execute:
+```bash
+python main.py
+```
+ou
+```bash
+python3 main.py
+```
+
+Ao executar o comando, a janela do jogo será aberta e o jogador poderá interagir utilizando o mouse.
 ---
 
 # Funcionalidades Implementadas
