@@ -33,6 +33,21 @@ class Simulation:
         self.target_zoom = 1.0
         self.pontuacao = 0
 
+        # 4. Timer do Jogo (90 segundos = 5400 ms)
+        self.tempo_inicio = pygame.time.get_ticks()
+        self.duracao_jogo = 90000  # 90 segundos em milissegundos
+
+    def get_tempo_restante(self):
+        """Retorna o tempo restante em segundos."""
+        tempo_decorrido = pygame.time.get_ticks() - self.tempo_inicio
+        tempo_restante = self.duracao_jogo - tempo_decorrido
+        return max(0, tempo_restante // 1000)
+
+    def tempo_acabou(self):
+        """Verifica se o tempo de jogo acabou."""
+        tempo_decorrido = pygame.time.get_ticks() - self.tempo_inicio
+        return tempo_decorrido >= self.duracao_jogo
+
     def update(self):
         """Processa entradas do usuário e física do mundo."""
         keys = pygame.key.get_pressed()
@@ -110,13 +125,31 @@ class Simulation:
                 p1[1]), int(p2[0]), int(p2[1]), color)
 
     def draw_hud(self, canvas):
-        """Renderiza o painel de pontuação na Viewport fixa."""
+        """Renderiza o painel de pontuação e timer na Viewport fixa."""
         score_str = str(self.pontuacao).zfill(4)
         for i, char in enumerate(score_str):
             self.draw_digit(canvas, char, 25 + i * 20, 25, 12, (255, 255, 255))
         # Moldura decorativa
         Rasterizer.draw_line(canvas, 15, 15, 115, 15, (200, 200, 200))
         Rasterizer.draw_line(canvas, 15, 15, 15, 65, (200, 200, 200))
+
+        # Timer centralizado no topo da tela
+        tempo = self.get_tempo_restante()
+        minutos = tempo // 60
+        segundos = tempo % 60
+
+        cx = self.width // 2 - 30  # ponto de início para centralizar
+        # Desenha minutos
+        self.draw_digit(canvas, minutos, cx, 20, 14, (255, 255, 100))
+        # Desenha ":"
+        canvas.set_pixel(cx + 20, 28, (255, 255, 100))
+        canvas.set_pixel(cx + 20, 32, (255, 255, 100))
+        canvas.set_pixel(cx + 21, 28, (255, 255, 100))
+        canvas.set_pixel(cx + 21, 32, (255, 255, 100))
+        # Desenha segundos (dezenas)
+        self.draw_digit(canvas, segundos // 10, cx + 26, 20, 14, (255, 255, 100))
+        # Desenha segundos (unidades)
+        self.draw_digit(canvas, segundos % 10, cx + 46, 20, 14, (255, 255, 100))
 
     def render_minimap(self, canvas):
         # viewport de zoom no canto superior direito
@@ -161,11 +194,19 @@ class Simulation:
         """Gerencia a ordem de desenho (Depth Sorting manual)."""
         w2s = self.get_world_to_screen()
 
-        # Superficie da agua (faixa com 3 tons para dar profundidade)
-        for dy, cor in [(0, (60, 120, 200)), (1, (40, 90, 170)), (2, (20, 60, 130))]:
-            sx0, sy0 = w2s(0, 370 + dy)
-            sx1, sy1 = w2s(self.width, 370 + dy)
-            Rasterizer.draw_line(canvas, int(sx0), int(sy0), int(sx1), int(sy1), cor)
+        # Fundo do oceano com gradiente de cor por vértice (Scanline com interpolação)
+        sx0_top, sy0_top = w2s(0, 370)
+        sx1_top, sy1_top = w2s(self.width, 370)
+        sx0_bot, sy0_bot = w2s(0, self.height)
+        sx1_bot, sy1_bot = w2s(self.width, self.height)
+
+        agua_grad = [
+            ((int(sx0_top), int(sy0_top)), (60, 120, 200)),
+            ((int(sx1_top), int(sy1_top)), (60, 120, 200)),
+            ((int(sx1_bot), int(sy1_bot)), (5, 15, 45)),
+            ((int(sx0_bot), int(sy0_bot)), (5, 15, 45)),
+        ]
+        Scanline.fill_gradient_polygon(canvas, agua_grad)
 
         # Ordem: Fundo -> Peixes -> Barco -> HUD
         for p in self.peixes_normais:

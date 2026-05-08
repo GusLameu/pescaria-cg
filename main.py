@@ -87,6 +87,10 @@ def main():
             # --- ATUALIZAÇÃO (LOGICA) ---
             sim.update()
 
+            # --- VERIFICAÇÃO DO TEMPO ---
+            if sim.tempo_acabou():
+                estado = "FIM_JOGO"
+
             # --- RENDERIZAÇÃO (DESENHO) ---
             # Limpa o canvas com a cor do mar profundo (Azul Marinho)
             canvas.clear((10, 30, 60))
@@ -97,6 +101,45 @@ def main():
             # Transfere o que foi pintado no Canvas para a tela do Pygame
             screen.blit(canvas.get_surface(), (0, 0))
             pygame.display.flip()
+
+        elif estado == "FIM_JOGO":
+            # --- TELA DE PONTUAÇÃO FINAL ---
+            screen.fill((10, 30, 60))
+
+            # Título
+            font_titulo = pygame.font.SysFont("Arial", 48, bold=True)
+            titulo = font_titulo.render("FIM DE JOGO", True, (255, 200, 0))
+            titulo_rect = titulo.get_rect(center=(WIDTH // 2, 80))
+            screen.blit(titulo, titulo_rect)
+
+            # Pontuação Final
+            font_grande = pygame.font.SysFont("Arial", 64, bold=True)
+            pontos_text = font_grande.render(str(sim.pontuacao), True, (100, 255, 100))
+            pontos_rect = pontos_text.get_rect(center=(WIDTH // 2, 220))
+            screen.blit(pontos_text, pontos_rect)
+
+            # Rótulo "Pontos"
+            font_label = pygame.font.SysFont("Arial", 28)
+            label = font_label.render("PONTOS", True, (200, 200, 200))
+            label_rect = label.get_rect(center=(WIDTH // 2, 310))
+            screen.blit(label, label_rect)
+
+            # Instruções
+            font_small = pygame.font.SysFont("Arial", 20)
+            instrucoes = font_small.render("Pressione ESPAÇO para voltar ao menu", True, (180, 180, 180))
+            instrucoes_rect = instrucoes.get_rect(center=(WIDTH // 2, 450))
+            screen.blit(instrucoes, instrucoes_rect)
+
+            pygame.display.flip()
+
+            # Entrada para voltar ao menu
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_SPACE or event.key == pygame.K_RETURN:
+                        estado = "MENU"
+                        sim = Simulation(WIDTH, HEIGHT)  # Reinicia o jogo
 
         # Mantém a taxa de quadros estável
         clock.tick(FPS)
