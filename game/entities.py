@@ -70,7 +70,7 @@ class Pescador:
 
         # 2. Calcular Posições X (Centralização)
         # O tronco começa em um offset lateral fixo
-        off_x = w_to_s(10) * self.barco.direcao
+        off_x = w_to_s(10) * self.barco.direcao_smooth
         tronco_x = int(sx + off_x)
         cabeca_x = tronco_x + (tw - cw) // 2
         chapeu_x = cabeca_x - (hw - cw) // 2
@@ -106,16 +106,31 @@ class VaraDePesca:
             self.pescador.barco.x, self.pescador.barco.y - 30
             )
         ponta_x, ponta_y = world_to_screen_func(
-            self.pescador.barco.x + (80 * self.pescador.barco.direcao), self.pescador.barco.y - 70 
+            self.pescador.barco.x + (80 * self.pescador.barco.direcao_smooth), self.pescador.barco.y - 70 
             )
         Rasterizer.draw_line(canvas, int(orig_x), int(
             orig_y), int(ponta_x), int(ponta_y), self.cor_vara
             )
 
-        anzol_x, anzol_y = world_to_screen_func(self.pescador.barco.x + (80 * self.pescador.barco.direcao),
+        anzol_x, anzol_y = world_to_screen_func(self.pescador.barco.x + (80 * self.pescador.barco.direcao_smooth),
                                                 self.pescador.barco.y - 70 + self.profundidade_linha)
         Rasterizer.draw_line(canvas, int(ponta_x), int(
             ponta_y), int(anzol_x), int(anzol_y), self.cor_linha)
+
+        # Desenha anzol na ponta da linha
+        ax, ay = int(anzol_x), int(anzol_y)
+        cor = (200, 200, 200)
+        for dy in range(0, 8):
+            canvas.set_pixel(ax, ay + dy, cor)
+        for dx in range(-3, 4):
+            canvas.set_pixel(ax + dx, ay + 8, cor)
+        canvas.set_pixel(ax - 3, ay + 9, cor)
+        canvas.set_pixel(ax - 3, ay + 10, cor)
+        canvas.set_pixel(ax - 2, ay + 11, cor)
+        canvas.set_pixel(ax - 1, ay + 12, cor)
+        canvas.set_pixel(ax,     ay + 12, cor)
+        canvas.set_pixel(ax + 1, ay + 12, cor)
+        canvas.set_pixel(ax + 1, ay + 11, cor)
 
 # --- ENTIDADES SUBQUÁTICAS (TRANSFORMAÇÕES MATRICIAIS) ---
 

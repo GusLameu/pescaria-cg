@@ -4,6 +4,7 @@ import math
 from game.entities import PeixeNormal, PeixeLendario, Barco, Pescador, VaraDePesca
 from core.rasterizer import Rasterizer
 from core.constants import gerar_textura_procedural
+from core.clipping import Clipping
 
 
 class Simulation:
@@ -43,8 +44,10 @@ class Simulation:
             self.barco.x += 4
             self.barco.direcao = 1
 
+        self.barco.direcao_smooth += (self.barco.direcao - self.barco.direcao_smooth) * 0.1
+
         # Movimentação do Anzol
-        if keys[pygame.K_DOWN] and self.vara.profundidade_linha < 250:
+        if keys[pygame.K_DOWN] and self.vara.profundidade_linha < 300:
             self.vara.profundidade_linha += 3
         if keys[pygame.K_UP] and self.vara.profundidade_linha > 20:
             self.vara.profundidade_linha -= 3
@@ -62,7 +65,7 @@ class Simulation:
 
     def _check_collisions(self):
         """Verifica intersecção entre anzol e peixes via distância euclidiana."""
-        anzol_x = self.barco.x + (80 * self.barco.direcao)
+        anzol_x = self.barco.x + (80 * self.barco.direcao_smooth)
         anzol_y = self.barco.y - 70 + self.vara.profundidade_linha
 
         # Lógica de captura: Distância < Raio de Colisão
@@ -114,6 +117,45 @@ class Simulation:
         Rasterizer.draw_line(canvas, 15, 15, 115, 15, (200, 200, 200))
         Rasterizer.draw_line(canvas, 15, 15, 15, 65, (200, 200, 200))
 
+    def render_minimap(self, canvas):
+        # viewport de zoom no canto superior direito
+        mx, my, mw, mh = self.width - 170, 10, 160, 120
+        zoom = 1.5
+
+        # centro = posição do anzol na tela principal
+        w2s = self.get_world_to_screen()
+        cx, cy = w2s(
+            self.barco.x + (80 * self.barco.direcao_smooth),
+            self.barco.y - 70 + self.vara.profundidade_linha
+        )
+        cx, cy = int(cx), int(cy)
+
+        # região de origem no canvas (ao redor do anzol)
+        src_w, src_h = mw // zoom, mh // zoom
+        src_x = cx - src_w // 2
+        src_y = cy - src_h // 2
+
+        # copia pixels da cena principal com zoom para a viewport
+        for dy in range(mh):
+            for dx in range(mw):
+                src_px = src_x + dx // zoom
+                src_py = src_y + dy // zoom
+                resultado = Clipping.cohen_sutherland(
+                    src_px, src_py, src_px, src_py,
+                    0, 0, self.width, self.height
+                )
+                if resultado:
+                    cor = canvas.get_pixel(src_px, src_py)
+                    if cor:
+                        canvas.set_pixel(mx + dx, my + dy, cor)
+
+        # borda
+        for x1, y1, x2, y2 in [
+            (mx, my, mx+mw, my), (mx+mw, my, mx+mw, my+mh),
+            (mx+mw, my+mh, mx, my+mh), (mx, my+mh, mx, my)
+        ]:
+            Rasterizer.draw_line(canvas, x1, y1, x2, y2, (255, 255, 255))
+
     def render(self, canvas):
         """Gerencia a ordem de desenho (Depth Sorting manual)."""
         w2s = self.get_world_to_screen()
@@ -126,3 +168,4 @@ class Simulation:
         self.pescador.render(canvas, w2s)
         self.vara.render(canvas, w2s)
         self.draw_hud(canvas)
+        self.render_minimap(canvas)
