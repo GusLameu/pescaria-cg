@@ -10,50 +10,25 @@ Este projeto busca proporcionar uma experiência visual inspirada em uma pescari
 ## Como Executar o Projeto
 
 ### Pré-requisitos
-- Python 3.x
-- Biblioteca PyGame instalada
+- Python 3.10+
+- pygame-ce (Community Edition — compatível com Python 3.12+)
 
-### Instalação do PyGame
+> **Atenção:** use `pygame-ce` e **não** `pygame`. Os dois não podem estar instalados ao mesmo tempo. Se tiver o pygame instalado, remova antes:
+> ```bash
+> pip uninstall pygame
+> ```
+
+### Instalação das Dependências
+
 ```bash
-pip install pygame
-```
-## Caso o repositório já esteja clonado e você queira apenas atualizar:
-```bash
-git pull
+pip install -r requirements.txt
 ```
 
-## Em seguida, acesse a pasta do projeto:
-```bash
-cd pescaria-cg
-```
----
+### Execução
 
-## Instalação das Dependências
-
-O projeto utiliza a biblioteca PyGame.
-
-Instale com:
-```bash
-pip install pygame
-```
-Caso esteja utilizando Linux ou MacOS:
-```bash
-pip3 install pygame
-```
----
-
-## 4. Execução do Jogo
-
-Após a instalação das dependências, execute:
 ```bash
 python main.py
 ```
-ou
-```bash
-python3 main.py
-```
-
-Ao executar o comando, a janela do jogo será aberta e o jogador poderá interagir utilizando o mouse.
 
 ---
 
@@ -173,7 +148,7 @@ Composição de transformações geométricas.
 
 # 5. Animação 2D
 
-A aplicação possui animação contínua em tempo real através do loop principal do PyGame.
+A aplicação possui animação contínua em tempo real através do loop principal do pygame-ce.
 
 Características:
 
@@ -239,7 +214,7 @@ Características:
 
 # 10. Menus e Interface
 
-O sistema possui menu gráfico interativo desenvolvido em PyGame.
+O sistema possui menu gráfico interativo desenvolvido em pygame-ce.
 
 Características:
 
@@ -305,7 +280,7 @@ Armazena:
 # Tecnologias Utilizadas
 
 * Python
-* PyGame
+* pygame-ce (Community Edition)
 * Matemática vetorial
 * Álgebra linear
 * Rasterização manual
