@@ -3,6 +3,7 @@ import random
 import math
 from game.entities import PeixeNormal, PeixeLendario, Barco, Pescador, VaraDePesca
 from core.rasterizer import Rasterizer
+from core.scanline import Scanline
 from core.constants import gerar_textura_procedural
 from core.clipping import Clipping
 
@@ -159,6 +160,12 @@ class Simulation:
     def render(self, canvas):
         """Gerencia a ordem de desenho (Depth Sorting manual)."""
         w2s = self.get_world_to_screen()
+
+        # Superficie da agua (faixa com 3 tons para dar profundidade)
+        for dy, cor in [(0, (60, 120, 200)), (1, (40, 90, 170)), (2, (20, 60, 130))]:
+            sx0, sy0 = w2s(0, 370 + dy)
+            sx1, sy1 = w2s(self.width, 370 + dy)
+            Rasterizer.draw_line(canvas, int(sx0), int(sy0), int(sx1), int(sy1), cor)
 
         # Ordem: Fundo -> Peixes -> Barco -> HUD
         for p in self.peixes_normais:

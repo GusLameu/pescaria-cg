@@ -3,7 +3,7 @@ import pygame
 from core.rasterizer import Rasterizer
 from core.scanline import Scanline
 from core.transforms import Transforms
-from core.constants import PEIXE_MODELO_UV
+from core.constants import PEIXE_MODELO_UV, PEIXE_CAUDA, PEIXE_NADADEIRA
 
 # --- ENTIDADES DE SUPERFÍCIE (LÓGICA PIXEL ART ESCALÁVEL) ---
 
@@ -157,12 +157,18 @@ class PeixeNormal:
         m_final = Transforms.multiply(
             m_trans, Transforms.multiply(m_flip, m_escala))
 
-        pontos_render = []
-        for pt in self.vertices_base:
-            p_mundo = Transforms.apply(m_final, pt)
-            pontos_render.append(world_to_screen_func(p_mundo[0], p_mundo[1]))
+        def transf(pts):
+            return [world_to_screen_func(*Transforms.apply(m_final, p)) for p in pts]
 
-        Scanline.fill_polygon(canvas, pontos_render, self.cor)
+        cor_escura = tuple(max(0, c - 50) for c in self.cor)
+
+        # 1. Corpo principal
+        Scanline.fill_polygon(canvas, transf(self.vertices_base), self.cor)
+        # 2. Cauda bifurcada
+        for cauda in PEIXE_CAUDA:
+            Scanline.fill_polygon(canvas, transf(cauda), cor_escura)
+        # 3. Nadadeira dorsal
+        Scanline.fill_polygon(canvas, transf(PEIXE_NADADEIRA), cor_escura)
 
 
 class PeixeLendario:
@@ -190,3 +196,11 @@ class PeixeLendario:
 
         Scanline.fill_textured_polygon_procedural(
             canvas, pontos_render, self.textura)
+
+        # Cauda e nadadeira com cor solida
+        cor_cauda = (100, 50, 10)
+        for cauda in PEIXE_CAUDA:
+            pts = [world_to_screen_func(*Transforms.apply(m_final, p)) for p in cauda]
+            Scanline.fill_polygon(canvas, pts, cor_cauda)
+        pts_fin = [world_to_screen_func(*Transforms.apply(m_final, p)) for p in PEIXE_NADADEIRA]
+        Scanline.fill_polygon(canvas, pts_fin, cor_cauda)
