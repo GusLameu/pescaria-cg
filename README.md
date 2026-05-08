@@ -1,13 +1,9 @@
 
 # Projeto de Computação Gráfica — Simulação 2D com Rasterização Manual - Pescaria CG
 
-## Descrição Geral
+## Descrição do Projeto
 
-Este projeto consiste em uma simulação gráfica 2D desenvolvida em Python utilizando a biblioteca PyGame, com foco na implementação manual dos principais algoritmos fundamentais de Computação Gráfica.
-
-A aplicação renderiza uma cena interativa contendo um peixe modelado por polígonos e preenchido com textura procedural, utilizando algoritmos implementados do zero sem depender das primitivas gráficas prontas do PyGame.
-
-O objetivo principal do projeto é demonstrar o funcionamento interno de técnicas clássicas de rasterização, preenchimento, transformações geométricas, clipping e mapeamento de textura.
+Este projeto busca proporcionar uma experiência visual inspirada em uma pescaria em ambiente 2D, simulando o movimento de um peixe em um cenário aquático através de técnicas clássicas de Computação Gráfica. A aplicação combina animação, interação e renderização manual para representar de forma dinâmica elementos presentes em uma cena de pesca.
 
 ---
 
